@@ -1,0 +1,11 @@
+.settings/
+.idea/
+bower_components/
+susi-web/.externalToolBuilders/org.eclipse.wst.jsdt.core.javascriptValidator.launch
+susi-web/src/main/webapp/bower_BACKUP_*
+susi-web/src/main/webapp/bower_LOCAL_*
+susi-web/src/main/webapp/bower_REMOTE_*
+susi-web/src/main/webapp/bower_BASE_*
+runtime/data/test/import/bad
+*.iml
+target/

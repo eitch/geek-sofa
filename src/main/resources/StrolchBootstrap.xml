@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StrolchBootstrap>
+    <env id="dev" default="true">
+        <environment>dev</environment>
+        <root>runtime</root>
+    </env>
+    <env id="dev.local" default="true">
+        <root>${project.basedir}/runtime</root>
+        <environment>dev</environment>
+    </env>
+    <env id="test" default="true">
+        <root>/absolute/path/to/runtime</root>
+        <environment>test</environment>
+    </env>
+</StrolchBootstrap>

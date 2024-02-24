@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Users>
+    <User userId="0" username="agent">
+        <State>SYSTEM</State>
+        <Roles>
+            <Role>ModelAccessor</Role>
+            <Role>PrivilegeAdmin</Role>
+            <Role>agent</Role>
+        </Roles>
+    </User>
+</Users>
