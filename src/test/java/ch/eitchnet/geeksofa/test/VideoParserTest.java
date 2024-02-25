@@ -1,6 +1,6 @@
 package ch.eitchnet.geeksofa.test;
 
-import ch.eitchnet.geeksofa.model.VideoParser;
+import ch.eitchnet.geeksofa.parser.VideoParser;
 import li.strolch.model.Resource;
 import org.junit.Test;
 

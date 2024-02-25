@@ -1,0 +1,103 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/paper-material/paper-material.html">
+<link rel="import" href="../../bower_components/google-youtube/google-youtube.html">
+<link rel="import" href="../../bower_components/strolch-wc-raw-text/strolch-wc-raw-text.html">
+
+<link rel="import" href="../styles/c-app-style.html">
+
+<dom-module id="c-video">
+    <template>
+
+        <!-- Style -->
+        <style is="custom-style" include="c-app-style">
+            :host {
+                margin: 16px;
+                background-color: #2B2B2BFF;
+                color: #FAEBD7FF;
+            }
+
+            h2 {
+                color: #FAEBD7FF;
+            }
+
+            h3 {
+                color: grey;
+            }
+
+            paper-material {
+                background-color: #2B2B2BFF;
+                color: #FAEBD7FF;
+            }
+
+            .video {
+                display: flex;
+                flex-direction: row;
+            }
+
+            .left {
+                flex-basis: 320px;
+                flex-grow: 1;
+                flex-shrink: 1;
+            }
+
+            .right {
+                padding-left: 16px;
+                flex-basis: 600px;
+                flex-grow: 3;
+                flex-shrink: 3;
+            }
+
+        </style>
+
+        <!-- Content -->
+        <paper-material elevation="1">
+            <h2>[[video.title]]</h2>
+            <h3>[[formatDateTimeDashIfEmpty(video.startTime)]]</h3>
+            <div class="video">
+                <div class="left">
+                    <!--                    <iframe width="320" height="180" src="https://www.youtube.com/embed/[[video.ytId]]"-->
+                    <!--                            title="[[video.title]]" frameborder="0"-->
+                    <!--                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"-->
+                    <!--                            allowfullscreen></iframe>-->
+
+                    <google-youtube video-id="[[video.ytId]]" height="270px" width="480px" rel="0"></google-youtube>
+
+                </div>
+                <div class="right">
+                    <strolch-wc-raw-text text="[[video.description]]"></strolch-wc-raw-text>
+                    <!--                    <p>[[video.description]]</p>-->
+                </div>
+            </div>
+
+        </paper-material>
+
+    </template>
+
+    <script>
+        Polymer({
+            is: 'c-video',
+
+            behaviors: [
+                CustomComponentBehavior
+            ],
+
+            properties: {
+                video: {
+                    type: Object
+                }
+            },
+
+            /* Observers */
+            observers: [],
+
+            /* Listeners*/
+            listeners: {},
+
+            /* Private */
+
+            /* Public */
+
+            /* Lifecycle */
+        });
+    </script>
+</dom-module>

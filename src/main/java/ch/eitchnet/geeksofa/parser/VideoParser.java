@@ -1,4 +1,4 @@
-package ch.eitchnet.geeksofa.model;
+package ch.eitchnet.geeksofa.parser;
 
 import li.strolch.agent.api.StrolchAgent;
 import li.strolch.model.Resource;
@@ -57,7 +57,7 @@ public class VideoParser {
 	private Resource parseRecord(CSVRecord record) {
 		String videoId = record.get(0);
 		String title = record.get(1);
-		String description = record.get(2);
+		String description = htmlify(record.get(2));
 		String startTime = record.get(3);
 
 		Resource videoRes = new Resource(StrolchAgent.getUniqueId(), title, TYPE_VIDEO);
@@ -67,5 +67,67 @@ public class VideoParser {
 		videoRes.setDate(PARAM_START_TIME, LocalDateTime.parse(startTime, DT_FORMATTER).atZone(ZoneId.systemDefault()));
 
 		return videoRes;
+	}
+
+	private String htmlify(String text) {
+		String[] paragraphs = text.trim().split("\n\n");
+
+		StringBuilder sb = new StringBuilder();
+
+		for (String paragraph : paragraphs) {
+
+			String[] lines = paragraph.split("\n");
+			if (lines.length == 1) {
+				appendParagraph(paragraph, sb);
+			} else if (lines[0].startsWith("***") && lines[1].startsWith("(")) {
+				appendListWithTitle(sb, lines, "(");
+			} else if (!lines[0].startsWith("(") && lines[1].startsWith("(")) {
+				appendListWithTitle(sb, lines, "(");
+			} else if (!lines[0].startsWith("_") && lines[1].startsWith("_")) {
+				appendListWithTitle(sb, lines, "_");
+			} else if (lines[0].startsWith("(")) {
+				appendList(sb, lines);
+			} else {
+				appendParagraphWithLineBreaks(sb, lines);
+			}
+		}
+
+		return sb.toString();
+	}
+
+	private static void appendParagraph(String paragraph, StringBuilder sb) {
+		sb.append("<p>").append(paragraph).append("</p>");
+	}
+
+	private void appendListWithTitle(StringBuilder sb, String[] lines, String itemChar) {
+		sb.append("<h3>").append(lines[0]).append("</h3>");
+		sb.append("<ul>");
+		int i = 1;
+		for (; i < lines.length; i++) {
+			String line = lines[i];
+			if (!line.startsWith(itemChar))
+				break;
+			sb.append("<li>").append(line).append("</li>");
+		}
+		sb.append("</ul>");
+		for (; i < lines.length; i++) {
+			sb.append(lines[i]).append("<br/>");
+		}
+	}
+
+	private static void appendList(StringBuilder sb, String[] lines) {
+		sb.append("<ul>");
+		for (String line : lines) {
+			sb.append("<li>").append(line).append("</li>");
+		}
+		sb.append("</ul>");
+	}
+
+	private static void appendParagraphWithLineBreaks(StringBuilder sb, String[] lines) {
+		sb.append("<p>");
+		for (String line : lines) {
+			sb.append(line).append("<br/>");
+		}
+		sb.append("</p>");
 	}
 }

@@ -1,0 +1,92 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<link rel="import" href="../behaviors/c-component-behavior.html">
+<link rel="import" href="../styles/c-app-style.html">
+<link rel="import" href="../widgets/c-video.html">
+
+<dom-module id="videos-app">
+    <template>
+
+        <style is="custom-style" include="c-app-style">
+            :root {
+                display: block;
+                background-color: #2B2B2BFF;
+                color: #FAEBD7FF;
+            }
+
+            .centered {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            h2.centered {
+                text-align: center;
+            }
+
+            .videos {
+                display: flex;
+                flex-direction: column;
+
+                max-width: 1000px;
+            }
+
+        </style>
+
+        <h2 class="centered">SRF Geek Sofa Videos</h2>
+
+        <!-- Content -->
+        <div class="videos centered">
+            <template is="dom-repeat" items="[[videos]]" as="video">
+                <c-video video="[[video]]"></c-video>
+            </template>
+        </div>
+
+        <!-- Ajax requests -->
+        <iron-ajax id="ajaxGetVideos"
+                   url="[[baseRestPath]]/videos"
+                   content-type="application/json"
+                   handle-as="json"
+                   method="GET"
+                   on-response="onGetVideosResponse"
+                   on-error="onRequestError"></iron-ajax>
+
+    </template>
+
+    <script>
+
+        Polymer({
+
+            is: 'videos-app',
+
+            behaviors: [
+                CustomComponentBehavior
+            ],
+
+            properties: {
+                searchTerm: {
+                    type: String
+                },
+                videos: {
+                    type: Array
+                }
+            },
+
+            observers: [],
+
+            listeners: {},
+            onGetVideosResponse: function (e) {
+                this.videos = e.detail.response.data;
+            },
+
+            /* Lifecycle */
+            attached: function () {
+                this.async(function () {
+                    this.$.ajaxGetVideos.generateRequest();
+                });
+            },
+        });
+
+    </script>
+
+</dom-module>

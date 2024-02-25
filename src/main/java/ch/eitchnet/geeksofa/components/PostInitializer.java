@@ -1,6 +1,6 @@
 package ch.eitchnet.geeksofa.components;
 
-import ch.eitchnet.geeksofa.model.VideoParser;
+import ch.eitchnet.geeksofa.parser.VideoParser;
 import li.strolch.agent.api.ComponentContainer;
 import li.strolch.agent.impl.SimplePostInitializer;
 import li.strolch.model.Resource;
