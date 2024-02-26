@@ -16,8 +16,11 @@
     </scm>
 
     <properties>
-        <appFinalName>geek-sofa-yt</appFinalName>
-        <warFinalName>geek-sofa-yt</warFinalName>
+        <appFinalName>geek-sofa</appFinalName>
+        <warFinalName>geek-sofa</warFinalName>
+        <customer>NOT-SET</customer>
+        <environment>NOT-SET</environment>
+        <strolch.env>${environment}.${customer}</strolch.env>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
@@ -376,6 +379,18 @@
         </profile>
 
         <profile>
+            <id>docker</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <customer>local</customer>
+                <environment>prod</environment>
+            </properties>
+        </profile>
+
+
+        <profile>
             <id>release</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
@@ -440,12 +455,17 @@
                             <failOnMissingWebXml>false</failOnMissingWebXml>
                             <warName>${warFinalName}</warName>
                             <packagingExcludes>app/**/*,node_modules/**/*</packagingExcludes>
+                            <webResources>
+                                <resource>
+                                    <directory>src/env/${customer}/${environment}</directory>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </webResources>
                         </configuration>
                     </plugin>
 
                 </plugins>
             </build>
         </profile>
-
     </profiles>
 </project>

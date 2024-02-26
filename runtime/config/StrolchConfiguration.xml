@@ -73,7 +73,7 @@
         <!-- taken from global env -->
     </env>
 
-    <env id="test">
+    <env id="prod">
         <!-- taken from global env -->
     </env>
 </StrolchConfiguration>
