@@ -9,3 +9,6 @@ susi-web/src/main/webapp/bower_BASE_*
 runtime/data/test/import/bad
 *.iml
 target/
+node_modules/
+package-lock.json
+www/
