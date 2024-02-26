@@ -17,7 +17,7 @@
     "strolch-wc-raw-text": "strolch-li/strolch-wc-raw-text#^0.1.0",
     "strolch-wc-debounced-input": "strolch-li/strolch-wc-debounced-input#^0.1.6",
     "strolch-wc-date-time": "strolch-li/strolch-wc-date-time#^0.9.1",
-    "strolch-wc-paging": "strolch-li/strolch-wc-paging#^0.1.7",
+    "strolch-wc-paging": "strolch-li/strolch-wc-paging#^0.2.0",
     "google-youtube": "GoogleWebComponents/google-youtube#^1.2.1"
   },
   "devDependencies": {
