@@ -1,5 +1,12 @@
 <link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../../bower_components/strolch-wc-debounced-input/strolch-wc-debounced-input.html">
+<link rel="import" href="../../bower_components/strolch-wc-date-time/strolch-wc-date-picker.html">
+<link rel="import" href="../../bower_components/strolch-wc-paging/strolch-wc-paging.html">
 
 <link rel="import" href="../behaviors/c-component-behavior.html">
 <link rel="import" href="../styles/c-app-style.html">
@@ -11,8 +18,14 @@
         <style is="custom-style" include="c-app-style">
             :root {
                 display: block;
-                background-color: #2B2B2BFF;
-                color: #FAEBD7FF;
+            }
+
+            paper-material {
+                padding: 0;
+
+                margin-left: auto;
+                margin-right: auto;
+                max-width: 1000px;
             }
 
             .centered {
@@ -20,29 +33,111 @@
                 margin-right: auto;
             }
 
-            h2.centered {
+            h2 {
+                padding: 0 16px;
+            }
+
+            h1.centered {
+                text-align: center;
+            }
+
+            p.centered {
                 text-align: center;
             }
 
             .videos {
                 display: flex;
                 flex-direction: column;
+            }
 
-                max-width: 1000px;
+            #debouncedInput {
+                display: inline-block;
+                max-width: 300px;
+            }
+
+            strolch-wc-debounced-input {
+                --focus-color: var(--dark-theme-base-color)
+            }
+
+            .search-input {
+                display: flex;
+                justify-content: space-around;
+                align-items: end;
+            }
+
+            strolch-wc-date-picker {
+                display: inline-block;
+                height: 62px;
+            }
+
+            .tab-title {
+                text-transform: uppercase full-width;
+                color: var(--custom-bg-color);
             }
 
         </style>
 
-        <h2 class="centered">SRF Geek Sofa Videos</h2>
+        <h1 class="centered">SRF Geek Sofa Videos</h1>
+        <p class="centered">[[meta.size]] Videos zwischen [[formatDateTimeDashIfEmpty(meta.earliestStartTime)]] bis
+            [[formatDateTimeDashIfEmpty(meta.latestStartTime)]]</p>
 
         <!-- Content -->
-        <div class="videos centered">
-            <template is="dom-repeat" items="[[videos]]" as="video">
-                <c-video video="[[video]]"></c-video>
-            </template>
-        </div>
+        <paper-material elevation="1">
+            <paper-tabs selected="{{selectedTab}}" attr-for-selected="name">
+                <paper-tab name="spotlight" on-tap="refresh"><span class="tab-title">Spotlight</span></paper-tab>
+                <paper-tab name="search" on-tap="refresh"><span class="tab-title">Suche</span></paper-tab>
+            </paper-tabs>
+
+            <iron-pages selected="[[selectedTab]]" attr-for-selected="id">
+                <div id="spotlight">
+                    <div class="centered">
+                        <h2>[[spotlightText]]</h2>
+                        <c-video video="[[spotlight]]"></c-video>
+                    </div>
+                </div>
+                <div id="search">
+                    <div class="search-input">
+                        <strolch-wc-debounced-input id="debouncedInput"
+                                                    debounced-input="{{searchTerm}}"
+                                                    placeholder="Deine Suche..."
+                                                    autofocus></strolch-wc-debounced-input>
+                        <div>
+                            <strolch-wc-date-picker id="fromDatePicker" label="Von"
+                                                    value="{{fromDate}}"></strolch-wc-date-picker>
+                            <strolch-wc-date-picker id="toDatePicker" label="Bis"
+                                                    value="{{toDate}}"></strolch-wc-date-picker>
+                        </div>
+                    </div>
+                    <template is="dom-if" if="[[videos]]">
+                        <strolch-wc-paging id="paging1" data-obj="[[queryInfo]]" hide-set-limit></strolch-wc-paging>
+                        <div class="videos centered">
+                            <template is="dom-repeat" items="[[videos]]" as="video">
+                                <c-video video="[[video]]"></c-video>
+                            </template>
+                        </div>
+                        <template is="dom-if" if="[[arrayFilled(videos)]]">
+                            <strolch-wc-paging id="paging2" data-obj="[[queryInfo]]" hide-set-limit></strolch-wc-paging>
+                        </template>
+                    </template>
+                </div>
+            </iron-pages>
+        </paper-material>
 
         <!-- Ajax requests -->
+        <iron-ajax id="ajaxGetMeta"
+                   url="[[baseRestPath]]/videos/meta"
+                   content-type="application/json"
+                   handle-as="json"
+                   method="GET"
+                   on-response="onGetMetaResponse"
+                   on-error="onRequestError"></iron-ajax>
+        <iron-ajax id="ajaxGetSpotlight"
+                   url="[[baseRestPath]]/videos/spotlight"
+                   content-type="application/json"
+                   handle-as="json"
+                   method="GET"
+                   on-response="onGetSpotlightResponse"
+                   on-error="onRequestError"></iron-ajax>
         <iron-ajax id="ajaxGetVideos"
                    url="[[baseRestPath]]/videos"
                    content-type="application/json"
@@ -64,27 +159,153 @@
             ],
 
             properties: {
+                selectedTab: {
+                    type: String,
+                    value: "spotlight",
+                    observer: "selectedTabChanged"
+                },
                 searchTerm: {
-                    type: String
+                    type: String,
+                    observer: "searchTermChanged"
+                },
+                fromDate: {
+                    type: String,
+                    value: null,
+                    observer: "fromDateChanged"
+                },
+                toDate: {
+                    type: String,
+                    value: null,
+                    observer: "toDateChanged"
+                },
+                meta: {
+                    type: Object,
+                    value: null
+                },
+                spotlight: {
+                    type: Object,
+                    value: null
+                },
+                spotlightText: {
+                    type: String,
+                    computed: "computeSpotlight(spotlight)"
+                },
+                queryInfo: {
+                    type: Object,
+                    value: null
                 },
                 videos: {
-                    type: Array
+                    type: Array,
+                    value: [],
+                    observer: "videosChanged"
                 }
             },
 
+            arrayFilled: function (array) {
+                return array != null && array.length > 0;
+            },
+
             observers: [],
+            videosChanged: function (newValue) {
+                if (newValue != null) {
+                    this.async(function () {
+                        var pager = this.$$("#paging1");
+                        if (pager != null)
+                            pager.ajax = this.$.ajaxGetVideos;
+                        pager = this.$$("#paging2");
+                        if (pager != null)
+                            pager.ajax = this.$.ajaxGetVideos;
+                    }, 10);
+                }
+            },
+            fromDateChanged: function (newValue) {
+                if (newValue == null) {
+                    this.$.toDatePicker.min = null;
+                } else {
+                    this.$.toDatePicker.min = newValue;
+                    this.$.toDatePicker.value = newValue;
+                }
+
+                this.searchVideos();
+            },
+            toDateChanged: function (newValue) {
+                this.searchVideos();
+            },
+            searchTermChanged: function () {
+                this.searchVideos();
+            },
+            selectedTabChanged: function () {
+                this.refresh();
+            },
+            computeSpotlight: function (spotlight) {
+                if (spotlight == null)
+                    return "Spotlight"
+
+                if (spotlight.daysAgo === 0)
+                    return "Spotlight: Heute vor " + spotlight.yearsAgo + " Jahren";
+
+                if (spotlight.daysNegative) {
+                    if (spotlight.daysAgo === 1) {
+                        return "Spotlight: Gestern vor " + spotlight.yearsAgo + " Jahren";
+                    } else if (spotlight.daysAgo === 2) {
+                        return "Spotlight: Vorgestern vor " + spotlight.yearsAgo + " Jahren";
+                    } else {
+                        return "Spotlight: Vor " + spotlight.daysAgo + " Tagen und " + spotlight.yearsAgo + " Jahren";
+                    }
+                } else {
+                    if (spotlight.daysAgo === 1) {
+                        return "Spotlight: Morgen vor " + spotlight.yearsAgo + " Jahren";
+                    } else if (spotlight.daysAgo === 2) {
+                        return "Spotlight: Übermorgen vor " + spotlight.yearsAgo + " Jahren";
+                    } else {
+                        return "Spotlight: In " + spotlight.daysAgo + " Tagen vor " + spotlight.yearsAgo + " Jahren";
+                    }
+                }
+            },
 
             listeners: {},
+            onGetMetaResponse: function (e) {
+                this.meta = e.detail.response.data;
+            },
+            onGetSpotlightResponse: function (e) {
+                this.spotlight = e.detail.response.data;
+            },
             onGetVideosResponse: function (e) {
+                this.queryInfo = e.detail.response;
                 this.videos = e.detail.response.data;
+                window.scrollTo(0, 0);
+            },
+            searchVideos: function () {
+                if (this.selectedTab !== "search")
+                    return;
+                this.debounce("search", function () {
+                    this._searchVideos();
+                }, 50);
+            },
+            _searchVideos: function () {
+                this.videos = [];
+                this.queryInfo = null;
+
+                var params = {};
+                params.query = this.searchTerm;
+                params.fromDate = this.fromDate == null ? null : this.fromDate.toISOString();
+                params.toDate = this.toDate == null ? null : this.toDate.toISOString();
+                this.$.ajaxGetVideos.params = params;
+                this.$.ajaxGetVideos.generateRequest();
             },
 
             /* Lifecycle */
-            attached: function () {
-                this.async(function () {
-                    this.$.ajaxGetVideos.generateRequest();
-                });
+            refresh: function () {
+                if (this.selectedTab === "spotlight") {
+                    this.$.ajaxGetMeta.generateRequest();
+                    this.$.ajaxGetSpotlight.generateRequest();
+                } else if (this.selectedTab === "search") {
+                    this.searchVideos();
+                }
             },
+            attached: function () {
+                this.refresh();
+            }
         });
 
     </script>

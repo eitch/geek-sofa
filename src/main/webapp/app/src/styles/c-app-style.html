@@ -7,8 +7,89 @@
         <style is="c-app-style" include="strolch-wc-app-style">
             :root {
 
+                background-color: #2B2B2BFF;
+                color: #ffffff;
+
+                font-family: 'Ubuntu-local', sans-serif;
+
+                --paper-font-common-base: {
+                    font-family: 'Ubuntu-local', sans-serif;
+                };
+
+                /* primary colors */
+                --custom-primary-bg-color: #2B2B2BFF;
+                --custom-bg-color: var(--paper-purple-a200);
+                --custom-light-bg-color: var(--paper-purple-500);
+                --custom-dark-bg-color: var(--paper-purple-900);
+
+                --primary-color: var(--custom-bg-color);
+                --secondary-color: var(--custom-primary-bg-color);
+                --app-primary-color: var(--custom-bg-color);
+                --app-secondary-color: var(--custom-primary-bg-color);
+                --app-light-highlight-fg-color: var(--custom-primary-bg-color);
+                --app-light-highlight-bg-color: var(--custom-light-bg-color);
+                --app-regular-highlight-fg-color: white;
+                --app-regular-highlight-bg-color: var(--custom-bg-color);
+                --app-dark-highlight-fg-color: white;
+                --app-dark-highlight-bg-color: var(--custom-dark-bg-color);
+
+                --light-theme-background-color: #ffffff;
+                --light-theme-base-color: #000000;
+                --light-theme-text-color: #212121; /*var(--paper-grey-900);*/
+                --light-theme-secondary-color: #737373; /* for secondary text and icons */
+                --light-theme-disabled-color: #9b9b9b; /* disabled/hint text */
+                --light-theme-divider-color: #dbdbdb;
+
+                --dark-theme-background-color: var(--custom-primary-bg-color); /*var(--paper-grey-900);*/
+                --dark-theme-base-color: #ffffff;
+                --dark-theme-text-color: #ffffff;
+                --dark-theme-secondary-color: #bcbcbc; /* for secondary text and icons */
+                --dark-theme-disabled-color: #646464; /* disabled/hint text */
+                --dark-theme-divider-color: #3c3c3c;
+
+                --primary-text-color: var(--dark-theme-text-color);
+                --primary-background-color: var(--dark-theme-background-color);
+                --secondary-text-color: var(--dark-theme-secondary-color);
+                --disabled-text-color: var(--dark-theme-disabled-color);
+                --divider-color: var(--dark-theme-divider-color);
+                --error-color: #dd2c00; /*var(--paper-deep-orange-a700);*/
+
+                --light-primary-color: #c5cae9; /*var(--paper-indigo-500);*/
+                --dark-primary-color: #303f9f; /*var(--paper-indigo-500);*/
+
+                --accent-color: #ff4081; /*var(--paper-pink-a200);*/
+                --light-accent-color: #ff80ab; /*var(--paper-pink-a100);*/
+                --dark-accent-color: #f50057; /*var(--paper-pink-a400);*/
+
+                --text-primary-color: var(--dark-theme-text-color);
+                --default-primary-color: var(--primary-color);
+                --app-dialog-title-color: var(--primary-color);
+
+                --badge-bg-color: var(--primary-color);
+                --paper-dialog-title: {
+                    color: var(--primary-color);
+                };
             }
 
+            h1, h2, h3, h4, h5, h6 {
+                color: var(--primary-color);
+            }
+
+            h3 {
+                color: var(--light-theme-secondary-color);
+            }
+
+            paper-material {
+                background-color: #2B2B2BFF;
+            }
+
+            atx-wc-animated-badge {
+                --paper-badge-background: var(--badge-bg-color);
+            }
+
+            strolch-wc-dialog-button, strolch-wc-information-dialog {
+                --strolch-dialog-title-color: var(--app-dialog-title-color);
+            }
         </style>
     </template>
 </dom-module>
