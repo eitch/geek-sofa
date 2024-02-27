@@ -26,7 +26,7 @@ public class VideoParserTest {
 	public void shouldParseVideos() {
 		File csvFile = new File("runtime/data/srf_geeksofa_videos.csv");
 		List<Resource> videos = new VideoParser(csvFile).parseVideos();
-		assertEquals(993, videos.size());
+		assertEquals(991, videos.size());
 
 		LocalDate today = LocalDate.of(2024, 1, 1);
 		while (today.isBefore(LocalDate.of(2025, 1, 1))) {
