@@ -3,8 +3,6 @@
     <User userId="0" username="agent">
         <State>SYSTEM</State>
         <Roles>
-            <Role>ModelAccessor</Role>
-            <Role>PrivilegeAdmin</Role>
             <Role>agent</Role>
         </Roles>
     </User>

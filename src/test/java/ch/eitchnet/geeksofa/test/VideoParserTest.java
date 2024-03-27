@@ -2,20 +2,19 @@ package ch.eitchnet.geeksofa.test;
 
 import ch.eitchnet.geeksofa.parser.VideoParser;
 import li.strolch.model.Resource;
-import li.strolch.utils.iso8601.ISO8601;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.text.MessageFormat;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 
 import static ch.eitchnet.geeksofa.model.Constants.*;
 import static ch.eitchnet.geeksofa.model.VideosHelper.daysBetweenIgnoreYear;
 import static ch.eitchnet.geeksofa.model.VideosHelper.findClosestVideo;
+import static java.text.MessageFormat.format;
 import static org.junit.Assert.assertEquals;
 
 public class VideoParserTest {
@@ -25,7 +24,7 @@ public class VideoParserTest {
 	@Test
 	public void shouldParseVideos() {
 		File csvFile = new File("runtime/data/srf_geeksofa_videos.csv");
-		List<Resource> videos = new VideoParser(csvFile).parseVideos();
+		Collection<Resource> videos = new VideoParser(csvFile).parseVideos().values();
 		assertEquals(991, videos.size());
 
 		LocalDate today = LocalDate.of(2024, 1, 1);
@@ -36,10 +35,10 @@ public class VideoParserTest {
 				continue;
 
 			if (closestVideos.size() > 1) {
-				logger.info("FOUND multiple closest for " + today + ":");
+				logger.info("FOUND multiple closest for {}:", today);
 				for (Resource closestVideo : closestVideos) {
 					LocalDate startTime = closestVideo.getDate(PARAM_START_TIME).toLocalDate();
-					logger.info(MessageFormat.format("{0} {1} {2} / {3}", closestVideo.getString(PARAM_YT_ID),
+					logger.info(format("{0} {1} {2} / {3}", closestVideo.getString(PARAM_YT_ID),
 							closestVideo.getString(PARAM_TITLE), startTime, today));
 				}
 				logger.info("");
@@ -54,10 +53,10 @@ public class VideoParserTest {
 			}
 
 			if (daysBetween < 0) {
-				logger.info(MessageFormat.format("{0} {1} {2} / {3}: {4}", video.getString(PARAM_YT_ID),
-						video.getString(PARAM_TITLE), startTime, today, daysBetween));
+				logger.info(format("{0} {1} {2} / {3}: {4}", video.getString(PARAM_YT_ID), video.getString(PARAM_TITLE),
+						startTime, today, daysBetween));
 			} else {
-				logger.info(MessageFormat.format("FUTURE: {0} {1} {2} / {3}: {4}", video.getString(PARAM_YT_ID),
+				logger.info(format("FUTURE: {0} {1} {2} / {3}: {4}", video.getString(PARAM_YT_ID),
 						video.getString(PARAM_TITLE), startTime, today, daysBetween));
 			}
 			today = today.plusDays(1);

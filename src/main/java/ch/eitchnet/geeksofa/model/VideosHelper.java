@@ -50,4 +50,66 @@ public class VideosHelper {
 			return daysWithOutYear * sign;
 		return daysWithOutYear;
 	}
+
+	public static String htmlify(String text) {
+		String[] paragraphs = text.trim().split("\n\n");
+
+		StringBuilder sb = new StringBuilder();
+
+		for (String paragraph : paragraphs) {
+
+			String[] lines = paragraph.split("\n");
+			if (lines.length == 1) {
+				appendParagraph(paragraph, sb);
+			} else if (lines[0].startsWith("***") && lines[1].startsWith("(")) {
+				appendListWithTitle(sb, lines, "(");
+			} else if (!lines[0].startsWith("(") && lines[1].startsWith("(")) {
+				appendListWithTitle(sb, lines, "(");
+			} else if (!lines[0].startsWith("_") && lines[1].startsWith("_")) {
+				appendListWithTitle(sb, lines, "_");
+			} else if (lines[0].startsWith("(")) {
+				appendList(sb, lines);
+			} else {
+				appendParagraphWithLineBreaks(sb, lines);
+			}
+		}
+
+		return sb.toString();
+	}
+
+	private static void appendParagraph(String paragraph, StringBuilder sb) {
+		sb.append("<p>").append(paragraph).append("</p>");
+	}
+
+	private static void appendListWithTitle(StringBuilder sb, String[] lines, String itemChar) {
+		sb.append("<h3>").append(lines[0]).append("</h3>");
+		sb.append("<ul>");
+		int i = 1;
+		for (; i < lines.length; i++) {
+			String line = lines[i];
+			if (!line.startsWith(itemChar))
+				break;
+			sb.append("<li>").append(line).append("</li>");
+		}
+		sb.append("</ul>");
+		for (; i < lines.length; i++) {
+			sb.append(lines[i]).append("<br/>");
+		}
+	}
+
+	private static void appendList(StringBuilder sb, String[] lines) {
+		sb.append("<ul>");
+		for (String line : lines) {
+			sb.append("<li>").append(line).append("</li>");
+		}
+		sb.append("</ul>");
+	}
+
+	private static void appendParagraphWithLineBreaks(StringBuilder sb, String[] lines) {
+		sb.append("<p>");
+		for (String line : lines) {
+			sb.append(line).append("<br/>");
+		}
+		sb.append("</p>");
+	}
 }
