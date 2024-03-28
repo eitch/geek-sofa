@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 import static ch.eitchnet.geeksofa.model.Constants.*;
+import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
+import static jakarta.ws.rs.core.Response.Status.UNAUTHORIZED;
 import static li.strolch.model.Tags.Json.ID;
 import static li.strolch.model.Tags.Json.MSG;
 import static li.strolch.rest.StrolchRestfulConstants.DATA;
@@ -38,10 +40,10 @@ public class ChatBotResource {
 		return cert;
 	}
 
-	@Path("{id}")
+	@Path("answer/{id}")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response getQuestion(@Context HttpServletRequest request, @PathParam("id") String id) {
+	public Response getAnswer(@Context HttpServletRequest request, @PathParam("id") String id) {
 		RestfulStrolchComponent instance = RestfulStrolchComponent.getInstance();
 		JsonObject resultJ = new JsonObject();
 		try {
@@ -52,18 +54,18 @@ public class ChatBotResource {
 			ChatBotHandler chatBot = instance.getComponent(ChatBotHandler.class);
 			Optional<ChatBotQuestion> questionO = chatBot.getQuestion(id);
 
-			if (questionO.isEmpty()) {
-				resultJ.addProperty(PARAM_COMPLETED, true);
-				resultJ.addProperty(MSG, "Die Frage existiert nicht (mehr).");
-			} else {
-				ChatBotQuestion question = questionO.get();
-				resultJ.addProperty(ID, question.getId());
-				resultJ.addProperty(PARAM_COMPLETED, question.isCompleted());
-				resultJ.addProperty(MSG, question.getAnswer());
-			}
+			if (questionO.isEmpty())
+				return toResponse(NOT_FOUND, "Die Frage existiert nicht (mehr).");
+
+			ChatBotQuestion question = questionO.get();
+			resultJ.addProperty(ID, question.getId());
+			resultJ.addProperty(PARAM_QUESTION, question.getQuestion());
+			resultJ.addProperty(PARAM_ANSWER, question.getAnswer());
+			resultJ.addProperty(PARAM_COMPLETED, question.isCompleted());
+
 		} catch (PrivilegeException e) {
 			logger.error("Privilege Exception when accessing chat bot!", e);
-			resultJ.addProperty(MSG, "Access Denied!");
+			return toResponse(UNAUTHORIZED, "Keine Berechtigung");
 		} catch (Exception e) {
 			resultJ.addProperty(MSG, getRootCauseMessage(e));
 		}
@@ -72,7 +74,7 @@ public class ChatBotResource {
 	}
 
 	@Path("ask")
-	@PUT
+	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response askQuestion(@Context HttpServletRequest request, String data) {
@@ -90,18 +92,19 @@ public class ChatBotResource {
 
 			if (chatBot.isNotReady()) {
 				resultJ.addProperty(PARAM_COMPLETED, true);
-				resultJ.addProperty(MSG, "Chatbot is not nicht bereit");
+				resultJ.addProperty(PARAM_ANSWER, "Chatbot is nicht bereit");
 			} else {
 				ChatBotQuestion question = chatBot.ask(questionString);
 				resultJ.addProperty(ID, question.getId());
+				resultJ.addProperty(PARAM_QUESTION, question.getQuestion());
+				resultJ.addProperty(PARAM_ANSWER, question.getAnswer());
 				resultJ.addProperty(PARAM_COMPLETED, question.isCompleted());
-				resultJ.addProperty(MSG, question.getAnswer());
 			}
 		} catch (PrivilegeException e) {
 			logger.error("Privilege Exception when accessing chat bot!", e);
-			resultJ.addProperty(MSG, "Access Denied!");
+			return toResponse(UNAUTHORIZED, "Keine Berechtigung");
 		} catch (Exception e) {
-			resultJ.addProperty(MSG, getRootCauseMessage(e));
+			resultJ.addProperty(PARAM_ANSWER, getRootCauseMessage(e));
 		}
 
 		return toResponse(DATA, resultJ);

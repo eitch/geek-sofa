@@ -8,13 +8,14 @@ public class ChatBotQuestion implements ChatBotListener {
 
 	private final ChatBotListener listener;
 	private final String question;
-	private String answer;
+	private volatile String answer;
 	private volatile boolean completed;
 
 	public ChatBotQuestion(ChatBotListener listener, String question) {
 		this.id = UUID.randomUUID().toString();
 		this.listener = listener;
 		this.question = question;
+		this.answer = "";
 	}
 
 	public String getId() {

@@ -1,21 +1,16 @@
 package ch.eitchnet.geeksofa.model;
 
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.StreamingOutput;
 import li.strolch.model.Resource;
-import li.strolch.persistence.api.StrolchTransaction;
 
 import java.time.LocalDate;
 import java.time.Period;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static ch.eitchnet.geeksofa.model.Constants.PARAM_START_TIME;
-import static ch.eitchnet.geeksofa.model.Constants.TYPE_VIDEO;
 import static li.strolch.utils.time.PeriodHelper.daysIn;
 
 public class VideosHelper {

@@ -4,9 +4,12 @@
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../../bower_components/paper-tabs/paper-tab.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-input/paper-textarea.html">
 <link rel="import" href="../../bower_components/strolch-wc-debounced-input/strolch-wc-debounced-input.html">
 <link rel="import" href="../../bower_components/strolch-wc-date-time/strolch-wc-date-picker.html">
 <link rel="import" href="../../bower_components/strolch-wc-paging/strolch-wc-paging.html">
+<link rel="import" href="../../bower_components/strolch-wc-information-dialog/strolch-wc-information-dialog.html">
 
 <link rel="import" href="../behaviors/c-component-behavior.html">
 <link rel="import" href="../styles/c-app-style.html">
@@ -79,6 +82,21 @@
                 max-width: 800px;
             }
 
+            .bot-form {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+            }
+
+            paper-input {
+                padding-right: 8px;
+            }
+
+            paper-textarea {
+                width: 100%;
+            }
+
         </style>
 
         <h1 class="centered">SRF Geek Sofa Videos</h1>
@@ -94,6 +112,7 @@
             <paper-tabs selected="{{selectedTab}}" attr-for-selected="name">
                 <paper-tab name="spotlight" on-tap="refresh"><span class="tab-title">Spotlight</span></paper-tab>
                 <paper-tab name="search" on-tap="refresh"><span class="tab-title">Suche</span></paper-tab>
+                <paper-tab name="bot"><span class="tab-title">Chat Bot</span></paper-tab>
             </paper-tabs>
 
             <iron-pages selected="[[selectedTab]]" attr-for-selected="id">
@@ -128,8 +147,33 @@
                         </template>
                     </template>
                 </div>
+                <div id="bot">
+                    <div class="bot-form">
+                        <template is="dom-if" if="[[!authenticated]]">
+                            <paper-input value="{{username}}" label="[[localize('username')]]"></paper-input>
+                            <paper-input value="{{password}}" label="[[localize('password')]]"
+                                         type="password"></paper-input>
+                            <paper-button on-tap="_authenticate" raised>[[localize('authenticate')]]</paper-button>
+                        </template>
+                        <template is="dom-if" if="[[authenticated]]">
+                            <div class="search-input">
+                                <paper-input value="{{botSearchTerm}}" label="Deine Suche..."></paper-input>
+                                <paper-button on-tap="_askBot" raised disabled$="[[askDisabled]]">Fragen</paper-button>
+                            </div>
+                        </template>
+                    </div>
+                    <template is="dom-if" if="[[authenticated]]">
+                        <div class="search-input">
+                            <paper-textarea rows="20" label="Antwort" value="[[answer.answer]]"
+                                            readonly></paper-textarea>
+                        </div>
+                    </template>
+                </div>
             </iron-pages>
         </paper-material>
+
+        <strolch-wc-information-dialog id="infoDlg"
+                                       locales-path="../../../locales.json"></strolch-wc-information-dialog>
 
         <!-- Ajax requests -->
         <iron-ajax id="ajaxGetMeta"
@@ -147,12 +191,32 @@
                    on-response="onGetSpotlightResponse"
                    on-error="onRequestError"></iron-ajax>
         <iron-ajax id="ajaxGetVideos"
-                   url="[[baseRestPath]]/videos"
+                   url="[[baseRestPath]]/videos/search"
                    content-type="application/json"
                    handle-as="json"
                    method="GET"
                    on-response="onGetVideosResponse"
                    on-error="onRequestError"></iron-ajax>
+        <iron-ajax id="ajaxPostAskBot"
+                   url="[[baseRestPath]]/chatbot/ask"
+                   content-type="application/json"
+                   handle-as="json"
+                   method="POST"
+                   on-response="ajaxPostAskBotResponse"
+                   on-error="ajaxPostAskBotError"></iron-ajax>
+        <iron-ajax id="ajaxGetAnswer"
+                   url="[[baseRestPath]]/chatbot/answer/[[answerId]]"
+                   content-type="application/json"
+                   handle-as="json"
+                   method="GET"
+                   on-response="ajaxGetAnswerResponse"
+                   on-error="ajaxGetAnswerError"></iron-ajax>
+        <iron-ajax id="ajax"
+                   content-type="application/json"
+                   handle-as="json"
+                   method="GET"
+                   on-response="onAjaxResponse"
+                   on-error="onAjaxRequestError"></iron-ajax>
 
     </template>
 
@@ -169,12 +233,28 @@
             properties: {
                 selectedTab: {
                     type: String,
-                    value: "spotlight",
+                    value: "bot",
                     observer: "selectedTabChanged"
+                },
+                authenticated: {
+                    type: Boolean,
+                    value: false
+                },
+                username: {
+                    type: String,
+                    value: ""
+                },
+                password: {
+                    type: String,
+                    value: ""
                 },
                 searchTerm: {
                     type: String,
                     observer: "searchTermChanged"
+                },
+                botSearchTerm: {
+                    type: String,
+                    value: ""
                 },
                 fromDate: {
                     type: String,
@@ -206,6 +286,58 @@
                     type: Array,
                     value: [],
                     observer: "videosChanged"
+                },
+                answerId: {
+                    type: String
+                },
+                answer: {
+                    type: Object
+                },
+                askDisabled: {
+                    type: Boolean,
+                    computed: "computeAskDisabled(authenticated, answer)"
+                }
+            },
+
+            listeners: {
+                "strolch-show-dialog": "onShowDialog"
+            },
+            observers: [],
+
+            computeAskDisabled: function (authenticated, answer) {
+                return !authenticated || (answer != null && !answer.completed);
+            },
+
+            onShowDialog: function (event) {
+                var dlgTitle = event.detail.title != null ? event.detail.title : "info";
+                var dlgText;
+                if (event.detail.text)
+                    dlgText = event.detail.text;
+                else if (event.detail.message)
+                    dlgText = event.detail.message;
+                else
+                    dlgText = JSON.stringify(event.detail);
+                this._showDialog(dlgTitle, dlgText);
+            },
+            _showDialog: function (dlgTitle, dlgText, dlgReason) {
+                if (this.localize) {
+                    var data = {
+                        title: this.localize(dlgTitle),
+                        line1: this.localize(dlgText)
+                    };
+                    if (dlgReason)
+                        data.line1 += ": " + dlgReason;
+                    this.$.infoDlg.open(data);
+                } else {
+                    this.debounce("show-dlg", function () {
+                        var data = {
+                            title: this.localize(dlgTitle),
+                            line1: this.localize(dlgText)
+                        };
+                        if (dlgReason)
+                            data.line1 += ": " + dlgReason;
+                        this.$.infoDlg.open(data);
+                    }.bind(this), 250);
                 }
             },
 
@@ -213,7 +345,6 @@
                 return array != null && array.length > 0;
             },
 
-            observers: [],
             videosChanged: function (newValue) {
                 if (newValue != null) {
                     this.async(function () {
@@ -271,7 +402,6 @@
                 }
             },
 
-            listeners: {},
             onGetMetaResponse: function (e) {
                 this.meta = e.detail.response.data;
             },
@@ -300,6 +430,79 @@
                 params.toDate = this.toDate == null ? null : this.toDate.toISOString();
                 this.$.ajaxGetVideos.params = params;
                 this.$.ajaxGetVideos.generateRequest();
+            },
+
+            _askBot: function () {
+                if (!this.authenticated) {
+                    this.showDialog("Noch nicht eingeloggt!");
+                    return;
+                }
+                if (this.botSearchTerm.length === 0)
+                    return;
+
+                this.$.ajaxPostAskBot.headers = {Authorization: "Basic " + btoa(this.username + ":" + this.password)};
+                this.$.ajaxPostAskBot.body = {question: this.botSearchTerm};
+                this.$.ajaxPostAskBot.generateRequest();
+            },
+            ajaxPostAskBotResponse: function (e) {
+                var response = e.detail.response;
+                console.log(response);
+                var answer = response.data;
+                this.answerId = answer.id;
+                this.refreshAnswer();
+            },
+            ajaxPostAskBotError: function (e) {
+                this.onRequestError(e);
+            },
+
+            refreshAnswer() {
+                if (this.answerId == null || this.answerId.length < 4)
+                    return;
+                this.$.ajaxGetAnswer.headers = {Authorization: "Basic " + btoa(this.username + ":" + this.password)};
+                this.$.ajaxGetAnswer.generateRequest();
+            },
+            ajaxGetAnswerResponse: function (e) {
+                var response = e.detail.response;
+                console.log(response);
+                this.answer = response.data;
+                if (!this.answer.completed) {
+                    this.async(function () {
+                        this.refreshAnswer();
+                    }, 1000);
+                }
+            },
+            ajaxGetAnswerError: function (e) {
+                if (e.detail.request.status === 404) {
+                    this.answerId = null;
+                } else {
+                    this.onRequestError(e);
+                }
+            },
+
+            _authenticate: function () {
+                if (this.username.length === 0 || this.password.length === 0) {
+                    this.showDialog("pleaseEnterUsernameAndPassword");
+                    return;
+                }
+                this.$.ajax.method = "GET";
+                this.$.ajax.headers = {Authorization: "Basic " + btoa(this.username + ":" + this.password)};
+                this.$.ajax.body = {};
+                this.$.ajax.url = this.baseRestPath + "/chatbot/unknown";
+                this.$.ajax.generateRequest();
+            },
+            onAjaxResponse: function (e) {
+                this.showDialog("Unexpected ajax response: " + e.detail.response);
+            },
+            onAjaxRequestError: function (e) {
+                if (e.detail.request.status === 403) {
+                    this.showDialog("wrongCredentials");
+                } else if (e.detail.request.status === 401) {
+                    this.showDialog("accessDenied");
+                } else if (e.detail.request.status === 404) {
+                    this.authenticated = true;
+                } else {
+                    this.onRequestError(e);
+                }
             },
 
             /* Lifecycle */

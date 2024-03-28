@@ -59,7 +59,7 @@
         </Component>
 
         <Component>
-            <name>LangChainHandler</name>
+            <name>ChatBotHandler</name>
             <api>ch.eitchnet.geeksofa.chatbot.ChatBotHandler</api>
             <impl>ch.eitchnet.geeksofa.chatbot.ChatBotHandler</impl>
             <depends>RestfulHandler</depends>
@@ -71,7 +71,7 @@
             <impl>ch.eitchnet.geeksofa.components.PostInitializer</impl>
             <depends>RestfulHandler</depends>
             <depends>ServiceHandler</depends>
-            <depends>LangChainHandler</depends>
+            <depends>ChatBotHandler</depends>
             <Properties>
                 <csvFile>runtime/data/srf_geeksofa_videos.csv</csvFile>
             </Properties>

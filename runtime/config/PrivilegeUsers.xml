@@ -6,4 +6,15 @@
             <Role>agent</Role>
         </Roles>
     </User>
+
+    <!-- test -->
+    <User userId="U01" username="test" password="$PBKDF2WithHmacSHA512,100000,256$33336566346637303538313464356463386437653433633464613465646164363161623063323032363936386666623234663435326534386536366264663330$fb3b739dc7de2d93a290d178dff9bc2bf18d001dee42593feeb534a903c8256f">
+        <Firstname>Ward A</Firstname>
+        <Lastname>79cc3c9d-99fb-4b07-87c4-ef924151fd87</Lastname>
+        <State>ENABLED</State>
+        <Locale>en</Locale>
+        <Roles>
+            <Role>User</Role>
+        </Roles>
+    </User>
 </Users>

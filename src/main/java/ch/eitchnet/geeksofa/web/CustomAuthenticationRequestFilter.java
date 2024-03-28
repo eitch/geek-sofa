@@ -9,7 +9,9 @@ public class CustomAuthenticationRequestFilter extends AuthenticationRequestFilt
 	@Override
 	protected Set<String> getUnsecuredPaths() {
 		Set<String> paths = super.getUnsecuredPaths();
-		paths.add("videos");
+		paths.add("videos/meta");
+		paths.add("videos/spotlight");
+		paths.add("videos/search");
 		return paths;
 	}
 }

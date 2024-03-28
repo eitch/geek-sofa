@@ -80,6 +80,7 @@ public class VideosResource {
 		});
 	}
 
+	@Path("search")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response query(@QueryParam("query") String query, @QueryParam("fromDate") String fromDate,
