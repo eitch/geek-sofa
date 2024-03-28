@@ -1,7 +1,7 @@
 package ch.eitchnet.geeksofa.test;
 
-import ch.eitchnet.geeksofa.langchain.LangChainHandler;
-import ch.eitchnet.geeksofa.langchain.LangChainQuestion;
+import ch.eitchnet.geeksofa.chatbot.ChatBotHandler;
+import ch.eitchnet.geeksofa.chatbot.ChatBotQuestion;
 import li.strolch.testbase.runtime.RuntimeMock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -14,9 +14,9 @@ import java.io.File;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
-public class LangChainHandlerTest {
+public class ChatBotHandlerTest {
 
-	private static final Logger logger = LoggerFactory.getLogger(LangChainHandlerTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(ChatBotHandlerTest.class);
 
 	private static RuntimeMock mock;
 	//private static Certificate cert;
@@ -24,7 +24,7 @@ public class LangChainHandlerTest {
 	@BeforeClass
 	public static void beforeClass() {
 		mock = new RuntimeMock();
-		mock.mockRuntime(new File("target/" + LangChainHandlerTest.class.getSimpleName()),
+		mock.mockRuntime(new File("target/" + ChatBotHandlerTest.class.getSimpleName()),
 				new File("src/test/resources/runtime"));
 		mock.startContainer();
 		//cert = mock.loginTest();
@@ -32,16 +32,15 @@ public class LangChainHandlerTest {
 
 	@AfterClass
 	public static void afterClass() {
-		if (mock != null) {
+		if (mock != null)
 			mock.destroyRuntime();
-		}
 	}
 
 	@Test
 	public void shouldMarshallWithValidation() throws Exception {
 		logger.info("Asking question...");
-		LangChainHandler langHandler = mock.getComponent(LangChainHandler.class);
-		LangChainQuestion question = langHandler.ask("Was kannst du über Guido sagen?");
+		ChatBotHandler chatBot = mock.getComponent(ChatBotHandler.class);
+		ChatBotQuestion question = chatBot.ask("Was kannst du über Guido sagen?");
 
 		long start = System.currentTimeMillis();
 		while (!question.isCompleted()) {

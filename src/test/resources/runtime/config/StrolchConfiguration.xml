@@ -60,8 +60,8 @@
 
         <Component>
             <name>LangChainHandler</name>
-            <api>ch.eitchnet.geeksofa.langchain.LangChainHandler</api>
-            <impl>ch.eitchnet.geeksofa.langchain.LangChainHandler</impl>
+            <api>ch.eitchnet.geeksofa.chatbot.ChatBotHandler</api>
+            <impl>ch.eitchnet.geeksofa.chatbot.ChatBotHandler</impl>
             <depends>RestfulHandler</depends>
         </Component>
 

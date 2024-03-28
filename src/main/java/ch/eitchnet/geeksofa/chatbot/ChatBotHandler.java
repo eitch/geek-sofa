@@ -1,4 +1,4 @@
-package ch.eitchnet.geeksofa.langchain;
+package ch.eitchnet.geeksofa.chatbot;
 
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
@@ -11,24 +11,37 @@ import li.strolch.agent.api.StrolchComponent;
 import li.strolch.runtime.configuration.ComponentConfiguration;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
-import static ch.eitchnet.geeksofa.langchain.DocSearchService.*;
+import static ch.eitchnet.geeksofa.chatbot.DocSearchService.*;
 
-public class LangChainHandler extends StrolchComponent {
+public class ChatBotHandler extends StrolchComponent {
 
 	private AllMiniLmL6V2EmbeddingModel embeddingModel;
 	private InMemoryEmbeddingStore<TextSegment> embeddingStore;
 	private OpenAiStreamingChatModel chatModel;
 
-	private List<LangChainListener> listeners;
+	private List<ChatBotListener> listeners;
+	private Map<String, ChatBotQuestion> questions;
+	private Future<?> prepareModelTask;
+	private String apiKey;
 
-	public LangChainHandler(ComponentContainer container, String componentName) {
+	public ChatBotHandler(ComponentContainer container, String componentName) {
 		super(container, componentName);
 	}
 
 	@Override
 	public void initialize(ComponentConfiguration configuration) throws Exception {
+		if (configuration.hasProperty("apiKey")) {
+			this.apiKey = configuration.getSecret("apiKey");
+		} else {
+			this.apiKey = ApiKeys.OPENAI_API_KEY;
+			if (this.apiKey == null || this.apiKey.isEmpty())
+				throw new IllegalStateException("Missing apiKey as configuration or environment variable!");
+		}
 		this.listeners = Collections.synchronizedList(new ArrayList<>());
+		this.questions = new ConcurrentHashMap<>();
 		addListener(this::logMessage);
 		super.initialize(configuration);
 	}
@@ -37,15 +50,31 @@ public class LangChainHandler extends StrolchComponent {
 		logger.info(message.trim());
 	}
 
-	public void addListener(LangChainListener listener) {
+	public void addListener(ChatBotListener listener) {
 		this.listeners.add(listener);
 	}
 
-	public void removeListener(LangChainListener listener) {
+	public void removeListener(ChatBotListener listener) {
 		this.listeners.remove(listener);
 	}
 
-	public void prepareModel(Collection<Video> videos) {
+	public Optional<ChatBotQuestion> getQuestion(String questionId) {
+		return Optional.ofNullable(questions.get(questionId));
+	}
+
+	public void setVideos(Collection<Video> videos) {
+		this.prepareModelTask = getExecutorService(getName()).submit(() -> prepareModel(videos));
+	}
+
+	public boolean isNotReady() {
+		return !isReady();
+	}
+
+	public boolean isReady() {
+		return this.prepareModelTask != null && this.prepareModelTask.isDone();
+	}
+
+	private void prepareModel(Collection<Video> videos) {
 		notifyListeners("\nInitiating for " + videos.size() + " videos...");
 
 		notifyListeners("\nBuilding text segments...");
@@ -76,7 +105,7 @@ public class LangChainHandler extends StrolchComponent {
 		this.embeddingStore.addAll(embeddings, textSegments);
 		notifyListeners("\nEmbeddings are added to the store");
 
-		this.chatModel = OpenAiStreamingChatModel.builder().apiKey(ApiKeys.OPENAI_API_KEY)
+		this.chatModel = OpenAiStreamingChatModel.builder().apiKey(apiKey)
 				// Available OpenAI models are listed on
 				// https://platform.openai.com/docs/models/continuous-model-upgrades
 				// gpt-4-1106-preview --> more expensive to use
@@ -93,10 +122,13 @@ public class LangChainHandler extends StrolchComponent {
 		}
 	}
 
-	public LangChainQuestion ask(String questionString) {
-		LangChainQuestion question = new LangChainQuestion(this::notifyListeners, questionString);
+	public ChatBotQuestion ask(String questionString) {
+		if (isNotReady())
+			throw new IllegalStateException("Model preparation is not yet done");
+		ChatBotQuestion question = new ChatBotQuestion(this::notifyListeners, questionString);
 		DocSearchService service = new DocSearchService(this.embeddingStore, this.embeddingModel, this.chatModel);
 		service.ask(question);
+		this.questions.put(question.getId(), question);
 		return question;
 	}
 }

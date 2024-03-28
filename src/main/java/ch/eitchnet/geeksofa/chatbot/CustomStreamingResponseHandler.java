@@ -1,4 +1,4 @@
-package ch.eitchnet.geeksofa.langchain;
+package ch.eitchnet.geeksofa.chatbot;
 
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.model.StreamingResponseHandler;
@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
 public class CustomStreamingResponseHandler implements StreamingResponseHandler<AiMessage> {
 	private static final Logger logger = LoggerFactory.getLogger(CustomStreamingResponseHandler.class);
 
-	private final LangChainQuestion question;
+	private final ChatBotQuestion question;
 
-	public CustomStreamingResponseHandler(LangChainQuestion question) {
+	public CustomStreamingResponseHandler(ChatBotQuestion question) {
 		this.question = question;
 	}
 

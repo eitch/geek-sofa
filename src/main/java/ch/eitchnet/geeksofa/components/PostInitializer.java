@@ -1,7 +1,7 @@
 package ch.eitchnet.geeksofa.components;
 
-import ch.eitchnet.geeksofa.langchain.LangChainHandler;
-import ch.eitchnet.geeksofa.langchain.Video;
+import ch.eitchnet.geeksofa.chatbot.ChatBotHandler;
+import ch.eitchnet.geeksofa.chatbot.Video;
 import ch.eitchnet.geeksofa.parser.VideoParser;
 import li.strolch.agent.api.ComponentContainer;
 import li.strolch.agent.impl.SimplePostInitializer;
@@ -43,7 +43,7 @@ public class PostInitializer extends SimplePostInitializer {
 			}
 		});
 
-		getComponent(LangChainHandler.class).prepareModel(videos.keySet());
+		getComponent(ChatBotHandler.class).setVideos(videos.keySet());
 
 		super.start();
 	}

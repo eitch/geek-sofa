@@ -1,4 +1,4 @@
-package ch.eitchnet.geeksofa.langchain;
+package ch.eitchnet.geeksofa.chatbot;
 
 public class ApiKeys {
 

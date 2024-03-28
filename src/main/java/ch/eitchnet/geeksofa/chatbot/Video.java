@@ -1,4 +1,4 @@
-package ch.eitchnet.geeksofa.langchain;
+package ch.eitchnet.geeksofa.chatbot;
 
 import li.strolch.agent.api.StrolchAgent;
 import li.strolch.model.Resource;

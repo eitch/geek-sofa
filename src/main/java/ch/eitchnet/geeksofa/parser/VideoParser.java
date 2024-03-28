@@ -1,6 +1,6 @@
 package ch.eitchnet.geeksofa.parser;
 
-import ch.eitchnet.geeksofa.langchain.Video;
+import ch.eitchnet.geeksofa.chatbot.Video;
 import li.strolch.model.Resource;
 import li.strolch.utils.dbc.DBC;
 import org.apache.commons.csv.CSVFormat;

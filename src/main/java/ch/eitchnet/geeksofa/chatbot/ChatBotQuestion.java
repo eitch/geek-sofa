@@ -1,15 +1,24 @@
-package ch.eitchnet.geeksofa.langchain;
+package ch.eitchnet.geeksofa.chatbot;
 
-public class LangChainQuestion implements LangChainListener {
+import li.strolch.agent.api.StrolchAgent;
 
-	private final LangChainListener listener;
+public class ChatBotQuestion implements ChatBotListener {
+
+	private final String id;
+
+	private final ChatBotListener listener;
 	private final String question;
 	private String answer;
-	private boolean completed;
+	private volatile boolean completed;
 
-	public LangChainQuestion(LangChainListener listener, String question) {
+	public ChatBotQuestion(ChatBotListener listener, String question) {
+		this.id = StrolchAgent.getUniqueId();
 		this.listener = listener;
 		this.question = question;
+	}
+
+	public String getId() {
+		return this.id;
 	}
 
 	public String getQuestion() {

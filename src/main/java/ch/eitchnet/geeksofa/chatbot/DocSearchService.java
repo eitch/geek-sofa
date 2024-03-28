@@ -1,4 +1,4 @@
-package ch.eitchnet.geeksofa.langchain;
+package ch.eitchnet.geeksofa.chatbot;
 
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.AllMiniLmL6V2EmbeddingModel;
@@ -15,9 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.*;
+
 public class DocSearchService {
 
-	public static final String MODEL_NAME = "gpt-3.5-turbo-1106";
+	public static final String MODEL_NAME = "gpt-4";
 	public static final String OBJECT_ID = "OBJECT_ID";
 	public static final String URL = "URL";
 
@@ -34,13 +36,13 @@ public class DocSearchService {
 		this.chatModel = chatModel;
 	}
 
-	void ask(LangChainQuestion question) {
+	void ask(ChatBotQuestion question) {
 		logger.info("Asking question '{}'", question.getQuestion());
 
 		// Find relevant embeddings in embedding store by semantic similarity
 		// You can play with parameters below to find a sweet spot for your specific use case
 		int maxResults = 10;
-		double minScore = 0.7;
+		double minScore = 0.5;
 		List<EmbeddingMatch<TextSegment>> relevantEmbeddings = embeddingStore.findRelevant(
 				embeddingModel.embed(question.getQuestion()).content(), maxResults, minScore);
 		logger.info("Number of relevant embeddings: {} for '{}'", relevantEmbeddings.size(), question.getQuestion());
@@ -73,7 +75,7 @@ public class DocSearchService {
 		String information = relevantEmbeddings
 				.stream()
 				.map(match -> match.embedded().text() + ". " + URL + ": " + match.embedded().metadata(URL))
-				.collect(Collectors.joining("\n\n"));
+				.collect(joining("\n\n"));
 
 		Map<String, Object> variables = new HashMap<>();
 		variables.put("question", question.getQuestion());
