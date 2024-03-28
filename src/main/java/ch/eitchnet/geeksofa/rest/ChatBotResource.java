@@ -5,10 +5,7 @@ import ch.eitchnet.geeksofa.chatbot.ChatBotQuestion;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.PUT;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -18,6 +15,8 @@ import li.strolch.privilege.model.PrivilegeContext;
 import li.strolch.rest.RestfulStrolchComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 import static ch.eitchnet.geeksofa.model.Constants.*;
 import static li.strolch.model.Tags.Json.ID;
@@ -37,6 +36,39 @@ public class ChatBotResource {
 		if (cert == null)
 			throw new IllegalStateException("Certificate missing on request as attribute " + STROLCH_CERTIFICATE);
 		return cert;
+	}
+
+	@Path("{id}")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getQuestion(@Context HttpServletRequest request, @PathParam("id") String id) {
+		RestfulStrolchComponent instance = RestfulStrolchComponent.getInstance();
+		JsonObject resultJ = new JsonObject();
+		try {
+			Certificate cert = getCertificate(request);
+			PrivilegeContext ctx = instance.getPrivilegeHandler().validate(cert);
+			ctx.validateAction(PRIVILEGE_CHAT_BOT, PRIVILEGE_VALUE_ASK);
+
+			ChatBotHandler chatBot = instance.getComponent(ChatBotHandler.class);
+			Optional<ChatBotQuestion> questionO = chatBot.getQuestion(id);
+
+			if (questionO.isEmpty()) {
+				resultJ.addProperty(PARAM_COMPLETED, true);
+				resultJ.addProperty(MSG, "Die Frage existiert nicht (mehr).");
+			} else {
+				ChatBotQuestion question = questionO.get();
+				resultJ.addProperty(ID, question.getId());
+				resultJ.addProperty(PARAM_COMPLETED, question.isCompleted());
+				resultJ.addProperty(MSG, question.getAnswer());
+			}
+		} catch (PrivilegeException e) {
+			logger.error("Privilege Exception when accessing chat bot!", e);
+			resultJ.addProperty(MSG, "Access Denied!");
+		} catch (Exception e) {
+			resultJ.addProperty(MSG, getRootCauseMessage(e));
+		}
+
+		return toResponse(DATA, resultJ);
 	}
 
 	@Path("ask")

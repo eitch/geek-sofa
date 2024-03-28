@@ -1,6 +1,6 @@
 package ch.eitchnet.geeksofa.chatbot;
 
-import li.strolch.agent.api.StrolchAgent;
+import java.util.UUID;
 
 public class ChatBotQuestion implements ChatBotListener {
 
@@ -12,7 +12,7 @@ public class ChatBotQuestion implements ChatBotListener {
 	private volatile boolean completed;
 
 	public ChatBotQuestion(ChatBotListener listener, String question) {
-		this.id = StrolchAgent.getUniqueId();
+		this.id = UUID.randomUUID().toString();
 		this.listener = listener;
 		this.question = question;
 	}
